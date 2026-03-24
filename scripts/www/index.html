@@ -1,11 +1,799 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        PakePlus
-    </body>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>电源效率计算 · 专业版</title>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(145deg, #eef2f8 0%, #dfe8f2 100%);
+            padding: 1.5rem;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+        }
+
+        .app-container {
+            max-width: 1300px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border-radius: 2.5rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 20, 40, 0.2), inset 0 1px 1px rgba(255,255,255,0.7);
+            padding: 2rem;
+            border: 1px solid rgba(255,255,255,0.6);
+            transition: all 0.2s;
+        }
+
+        h1 {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0a2f4f;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.3px;
+        }
+        h1 i {
+            color: #f5a65b;
+            font-size: 2rem;
+            filter: drop-shadow(0 2px 6px rgba(245,166,91,0.3));
+        }
+
+        /* 双卡片行 */
+        .indicator-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .indicator-card {
+            flex: 1;
+            min-width: 280px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 1.8rem;
+            padding: 1.4rem;
+            box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255,255,255,0.8);
+            transition: all 0.2s ease;
+        }
+        .indicator-card:hover {
+            background: rgba(255, 255, 255, 0.95);
+            transform: translateY(-2px);
+            box-shadow: 0 18px 30px -12px rgba(0, 0, 0, 0.12);
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1d628b;
+            border-bottom: 2px solid rgba(70,130,180,0.2);
+            padding-bottom: 0.6rem;
+            margin-bottom: 1.2rem;
+        }
+        .card-header .header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .card-header i {
+            font-size: 1.3rem;
+            color: #3483b0;
+        }
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .quick-btn {
+            background: #eef4fc;
+            border: 1px solid #cfdfef;
+            border-radius: 2rem;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #2a6b92;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .quick-btn:hover {
+            background: #e2ebf5;
+            border-color: #7aa9c7;
+            transform: scale(0.96);
+        }
+        .clear-btn {
+            background: #fef2f0;
+            border: 1px solid #f0cfc9;
+            color: #c97a5e;
+        }
+        .clear-btn:hover {
+            background: #fce8e4;
+            border-color: #e0aa9a;
+        }
+        .input-field {
+            margin-bottom: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .input-field label {
+            width: 115px;
+            font-weight: 500;
+            color: #2a6b92;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .input-field label i {
+            width: 1.3rem;
+            font-size: 0.9rem;
+            color: #5f95bb;
+        }
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+            min-width: 150px;
+        }
+        .input-wrapper input {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 1.5px solid #dfe8f0;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            background: white;
+            outline: none;
+            transition: 0.15s;
+            color: #1a4c6e;
+        }
+        .input-wrapper input:focus {
+            border-color: #5c9ac7;
+            box-shadow: 0 0 0 3px rgba(92,154,199,0.15);
+        }
+        .unit-badge {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #eef4fc;
+            padding: 0.2rem 0.7rem;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #3f7aa3;
+            border: 1px solid #c9daec;
+            pointer-events: none;
+        }
+        .result-value {
+            background: linear-gradient(115deg, #eef4fc, #ffffff);
+            border-radius: 2rem;
+            padding: 0.75rem;
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: #1c6085;
+            border: 1px solid #eef2f8;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+        }
+        .result-value small {
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: #6d98b9;
+        }
+        .status-badge {
+            display: inline-block;
+            margin-left: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 2rem;
+            background: rgba(0,0,0,0.05);
+        }
+        .status-pass {
+            color: #2a7a48;
+            background: #e6f4ea;
+        }
+        .status-fail {
+            color: #c0392b;
+            background: #fee9e7;
+        }
+
+        /* 多路表格区域 */
+        .multisection {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 1.8rem;
+            padding: 1.4rem;
+            margin: 1.8rem 0;
+            border: 1px solid rgba(255,255,255,0.7);
+        }
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1d628b;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .section-title i {
+            color: #e67e22;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 1.2rem;
+        }
+        table {
+            width: 100%;
+            min-width: 560px;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.6);
+            border-radius: 1.2rem;
+            font-size: 0.85rem;
+        }
+        th {
+            background: rgba(92,154,199,0.15);
+            padding: 0.9rem 0.5rem;
+            color: #1d628b;
+            font-weight: 600;
+            text-align: center;
+        }
+        td {
+            padding: 0.7rem 0.4rem;
+            text-align: center;
+            border-bottom: 1px solid #e2edf8;
+        }
+        td input {
+            width: 110px;
+            padding: 0.55rem 0.3rem;
+            border: 1.5px solid #dfe8f0;
+            border-radius: 1.8rem;
+            text-align: center;
+            font-size: 0.85rem;
+            background: white;
+            transition: 0.1s;
+        }
+        td input:focus {
+            border-color: #5c9ac7;
+            outline: none;
+        }
+        .power-cell {
+            background: #eef4fc;
+            border-radius: 1.5rem;
+            padding: 0.4rem 0.6rem;
+            font-weight: 600;
+            color: #2a6f99;
+            display: inline-block;
+            min-width: 75px;
+        }
+
+        /* 输出 + 效率区域 */
+        .output-efficiency-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin: 1.8rem 0 1rem;
+        }
+        .output-card {
+            flex: 1;
+            background: rgba(255,255,255,0.8);
+            border-radius: 1.8rem;
+            padding: 1.4rem;
+            border: 1px solid rgba(255,255,255,0.9);
+        }
+        .output-card .param-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 1.2rem;
+        }
+        .output-card label {
+            font-weight: 600;
+            color: #2a6f99;
+            font-size: 0.9rem;
+        }
+        .output-card input {
+            width: 150px;
+            padding: 0.6rem 1rem;
+            border: 1.5px solid #dfe8f0;
+            border-radius: 2rem;
+            text-align: center;
+            font-size: 0.9rem;
+            background: white;
+        }
+        .efficiency-solo-card {
+            flex: 1;
+            background: linear-gradient(125deg, #fffaf0, #fff5e8);
+            border-radius: 1.8rem;
+            padding: 1.4rem;
+            text-align: center;
+            border: 1px solid #ffe2bc;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.05);
+        }
+        .efficiency-solo-card .big-efficiency {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #2a7a48;
+            margin: 0.5rem 0;
+            letter-spacing: -0.5px;
+        }
+        .efficiency-solo-card small {
+            font-size: 1rem;
+        }
+        .total-input-display {
+            font-size: 0.85rem;
+            background: #f1f6fd;
+            border-radius: 2rem;
+            padding: 0.35rem 1rem;
+            display: inline-block;
+            margin-top: 0.6rem;
+            color: #3f7fa8;
+        }
+
+        .footnote {
+            margin-top: 1.8rem;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #8aaec9;
+            border-top: 1px solid rgba(92,154,199,0.15);
+            padding-top: 1rem;
+        }
+
+        @media (max-width: 680px) {
+            body {
+                padding: 0.8rem;
+            }
+            .app-container {
+                padding: 1.2rem;
+            }
+            h1 {
+                font-size: 1.6rem;
+            }
+            .indicator-card {
+                min-width: 100%;
+            }
+            .input-field label {
+                width: 100%;
+                margin-bottom: 0.2rem;
+            }
+            .input-wrapper {
+                width: 100%;
+            }
+            .output-card .param-line {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .output-card input {
+                width: 100%;
+            }
+            .efficiency-solo-card .big-efficiency {
+                font-size: 2.4rem;
+            }
+            td input {
+                width: 90px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <h1><i class="fas fa-bolt"></i> 电源效率计算</h1>
+
+    <!-- 电压调整率 & 负载调整率 -->
+    <div class="indicator-row">
+        <!-- 电压调整率卡片 -->
+        <div class="indicator-card">
+            <div class="card-header">
+                <div class="header-title"><i class="fas fa-wave-square"></i> 电压调整率</div>
+                <div class="action-buttons">
+                    <div class="quick-buttons" id="vrQuickBtns">
+                        <span class="quick-btn" data-val="5">5V</span>
+                        <span class="quick-btn" data-val="12">12V</span>
+                        <span class="quick-btn" data-val="28">28V</span>
+                        <span class="quick-btn" data-val="36">36V</span>
+                        <span class="quick-btn" data-val="48">48V</span>
+                    </div>
+                    <span class="quick-btn clear-btn" id="clearVRBtn"><i class="fas fa-undo-alt"></i> 清空</span>
+                </div>
+            </div>
+            <div class="input-field">
+                <label><i class="fas fa-arrow-up"></i> 满载最大值 (V)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="vr_max" step="any" value="0">
+                    <span class="unit-badge">V</span>
+                </div>
+            </div>
+            <div class="input-field">
+                <label><i class="fas fa-arrow-down"></i> 满载最小值 (V)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="vr_min" step="any" value="0">
+                    <span class="unit-badge">V</span>
+                </div>
+            </div>
+            <div class="input-field">
+                <label><i class="fas fa-battery-full"></i> 满载基准电压 (V)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="vr_ref" step="any" value="0">
+                    <span class="unit-badge">V</span>
+                </div>
+            </div>
+            <div class="result-value" id="vr_result">0.00<small>%</small></div>
+        </div>
+
+        <!-- 负载调整率卡片 -->
+        <div class="indicator-card">
+            <div class="card-header">
+                <div class="header-title"><i class="fas fa-balance-scale"></i> 负载调整率</div>
+                <div class="action-buttons">
+                    <div class="quick-buttons" id="lrQuickBtns">
+                        <span class="quick-btn" data-val="5">5V</span>
+                        <span class="quick-btn" data-val="12">12V</span>
+                        <span class="quick-btn" data-val="28">28V</span>
+                        <span class="quick-btn" data-val="36">36V</span>
+                        <span class="quick-btn" data-val="48">48V</span>
+                    </div>
+                    <span class="quick-btn clear-btn" id="clearLRBtn"><i class="fas fa-undo-alt"></i> 清空</span>
+                </div>
+            </div>
+            <div class="input-field">
+                <label><i class="fas fa-battery-empty"></i> 28V空载电压 (V)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="lr_noload" step="any" value="0">
+                    <span class="unit-badge">V</span>
+                </div>
+            </div>
+            <div class="input-field">
+                <label><i class="fas fa-battery-half"></i> 满载最小值 (V)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="lr_min" step="any" value="0">
+                    <span class="unit-badge">V</span>
+                </div>
+            </div>
+            <div class="result-value" id="lr_result">0.00<small>%</small></div>
+        </div>
+    </div>
+
+    <!-- 多路输入表格 v1~v8 -->
+    <div class="multisection">
+        <div class="section-title">
+            <span><i class="fas fa-table-list"></i> 多路输入参数</span>
+            <div class="action-buttons">
+                <div class="quick-buttons" id="multiQuickBtns">
+                    <span class="quick-btn" data-val="5">5V</span>
+                    <span class="quick-btn" data-val="12">12V</span>
+                    <span class="quick-btn" data-val="28">28V</span>
+                    <span class="quick-btn" data-val="36">36V</span>
+                    <span class="quick-btn" data-val="48">48V</span>
+                </div>
+                <span class="quick-btn clear-btn" id="clearMultiBtn"><i class="fas fa-undo-alt"></i> 清空</span>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>线路</th><th>额定电流 (A)</th><th>28V满载电压 (V)</th><th>输入功率 (W)</th> </tr>
+                </thead>
+                <tbody id="channelsTbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 输出参数 + 整机效率 -->
+    <div class="output-efficiency-row">
+        <div class="output-card">
+            <div class="card-header" style="margin-bottom:0.8rem;"><i class="fas fa-download"></i> 输出参数</div>
+            <div class="param-line">
+                <label><i class="fas fa-voltage"></i> 满载输出电压 (V)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="out_volt" step="any" value="0">
+                    <span class="unit-badge">V</span>
+                </div>
+            </div>
+            <div class="param-line">
+                <label><i class="fas fa-water"></i> 满载输出电流 (A)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="out_curr" step="any" value="0">
+                    <span class="unit-badge">A</span>
+                </div>
+            </div>
+            <div class="param-line">
+                <label><i class="fas fa-charging-station"></i> 输出功率</label>
+                <span id="out_power_display" style="font-weight:700; color:#2a6f99;">0.00 W</span>
+            </div>
+        </div>
+        <div class="efficiency-solo-card">
+            <div class="card-header" style="justify-content: center; border-bottom: none;"><i class="fas fa-chart-simple"></i> 整机效率</div>
+            <div class="big-efficiency" id="efficiency_big">0.00<small>%</small></div>
+            <div class="total-input-display" id="total_input_display">总输入: 0.00 W</div>
+        </div>
+    </div>
+    <div class="footnote"><i class="fas fa-calculator"></i> 个人使用 · 实时计算无四舍五入<br>标准：电压调整率＜1%合格，负载调整率＜3%合格，整机效率≥85%合格</div>
+</div>
+
+<script>
+    (function() {
+        // 保留指定小数位数但不四舍五入（直接截断）
+        function formatNoRound(value, maxDecimals = 8) {
+            if (isNaN(value) || !isFinite(value)) return '?';
+            let str = value.toString();
+            if (str.includes('e')) {
+                let num = value;
+                if (Math.abs(num) < 1e-12) return '0';
+                let decimalStr = num.toFixed(20).replace(/\.?0+$/, '');
+                let parts = decimalStr.split('.');
+                if (parts.length === 1) return parts[0];
+                let integer = parts[0];
+                let fraction = parts[1];
+                if (fraction.length > maxDecimals) fraction = fraction.substring(0, maxDecimals);
+                fraction = fraction.replace(/0+$/, '');
+                if (fraction.length === 0) return integer;
+                return integer + '.' + fraction;
+            }
+            let parts = str.split('.');
+            if (parts.length === 1) return parts[0];
+            let integer = parts[0];
+            let fraction = parts[1];
+            if (fraction.length > maxDecimals) fraction = fraction.substring(0, maxDecimals);
+            fraction = fraction.replace(/0+$/, '');
+            if (fraction.length === 0) return integer;
+            return integer + '.' + fraction;
+        }
+
+        // 更新带状态标签的结果
+        function updateResultWithStatus(element, value, unit, isPass, passText = '合格', failText = '不合格') {
+            // 保留原始数值格式
+            let formatted = formatNoRound(value, 8);
+            let statusHtml = `<span class="status-badge ${isPass ? 'status-pass' : 'status-fail'}">${isPass ? passText : failText}</span>`;
+            element.innerHTML = `${formatted}<small>${unit}</small> ${statusHtml}`;
+        }
+
+        // 获取DOM元素
+        const vrMax = document.getElementById('vr_max');
+        const vrMin = document.getElementById('vr_min');
+        const vrRef = document.getElementById('vr_ref');
+        const vrResult = document.getElementById('vr_result');
+        const lrNoLoad = document.getElementById('lr_noload');
+        const lrMin = document.getElementById('lr_min');
+        const lrResult = document.getElementById('lr_result');
+        const outVolt = document.getElementById('out_volt');
+        const outCurr = document.getElementById('out_curr');
+        const outPowerSpan = document.getElementById('out_power_display');
+        const efficiencyBig = document.getElementById('efficiency_big');
+        const totalInputSpan = document.getElementById('total_input_display');
+
+        // 生成8路 (v1~v8)
+        const channelNames = ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8'];
+        const channelCount = 8;
+        const tbody = document.getElementById('channelsTbody');
+        const currentInputs = [];
+        const voltageInputs = [];
+        const powerSpans = [];
+
+        for (let i = 0; i < channelCount; i++) {
+            const tr = document.createElement('tr');
+            const tdName = document.createElement('td');
+            tdName.textContent = channelNames[i];
+            tdName.style.fontWeight = '500';
+            tdName.style.color = '#1d628b';
+            tr.appendChild(tdName);
+
+            const tdCurr = document.createElement('td');
+            const currInput = document.createElement('input');
+            currInput.type = 'number';
+            currInput.step = 'any';
+            currInput.value = '0';
+            currInput.classList.add('channel-current');
+            tdCurr.appendChild(currInput);
+            tr.appendChild(tdCurr);
+            currentInputs.push(currInput);
+
+            const tdVolt = document.createElement('td');
+            const voltInput = document.createElement('input');
+            voltInput.type = 'number';
+            voltInput.step = 'any';
+            voltInput.value = '0';
+            voltInput.classList.add('channel-voltage');
+            tdVolt.appendChild(voltInput);
+            tr.appendChild(tdVolt);
+            voltageInputs.push(voltInput);
+
+            const tdPower = document.createElement('td');
+            const powerSpan = document.createElement('span');
+            powerSpan.className = 'power-cell';
+            powerSpan.textContent = '0.00';
+            tdPower.appendChild(powerSpan);
+            tr.appendChild(tdPower);
+            powerSpans.push(powerSpan);
+
+            tbody.appendChild(tr);
+        }
+
+        function computeAll() {
+            // 电压调整率
+            let max = parseFloat(vrMax.value);
+            let min = parseFloat(vrMin.value);
+            let ref = parseFloat(vrRef.value);
+            let vr = 0;
+            let vrValid = false;
+            if (!isNaN(max) && !isNaN(min) && !isNaN(ref) && ref !== 0) {
+                vr = ((max - min) / ref) * 100;
+                vrValid = true;
+            }
+            if (vrValid) {
+                let isPass = vr < 1;  // 合格标准 <1%
+                updateResultWithStatus(vrResult, vr, '%', isPass);
+            } else {
+                vrResult.innerHTML = '?<small>%</small> <span class="status-badge status-fail">无效</span>';
+            }
+
+            // 负载调整率
+            let noload = parseFloat(lrNoLoad.value);
+            let loadmin = parseFloat(lrMin.value);
+            let lr = 0;
+            let lrValid = false;
+            if (!isNaN(noload) && !isNaN(loadmin) && noload !== 0) {
+                lr = ((noload - loadmin) / noload) * 100;
+                lrValid = true;
+            }
+            if (lrValid) {
+                let isPass = lr < 3;  // 合格标准 <3%
+                updateResultWithStatus(lrResult, lr, '%', isPass);
+            } else {
+                lrResult.innerHTML = '?<small>%</small> <span class="status-badge status-fail">无效</span>';
+            }
+
+            // 总输入功耗
+            let totalInputPower = 0;
+            for (let i = 0; i < channelCount; i++) {
+                let curr = parseFloat(currentInputs[i].value);
+                let volt = parseFloat(voltageInputs[i].value);
+                if (isNaN(curr)) curr = 0;
+                if (isNaN(volt)) volt = 0;
+                let power = curr * volt;
+                powerSpans[i].textContent = formatNoRound(power, 6);
+                totalInputPower += power;
+            }
+            totalInputSpan.innerHTML = `总输入: ${formatNoRound(totalInputPower, 6)} W`;
+
+            // 输出功率
+            let outV = parseFloat(outVolt.value);
+            let outA = parseFloat(outCurr.value);
+            if (isNaN(outV)) outV = 0;
+            if (isNaN(outA)) outA = 0;
+            let outPower = outV * outA;
+            outPowerSpan.innerHTML = formatNoRound(outPower, 6) + ' W';
+
+            // 整机效率 (总输入 / 输出)
+            let efficiency = 0;
+            let effValid = false;
+            if (outPower > 0) {
+                efficiency = (totalInputPower / outPower) * 100;
+                effValid = true;
+            }
+            if (effValid) {
+                let isPass = efficiency >= 85;  // 合格标准 ≥85%
+                efficiencyBig.innerHTML = formatNoRound(efficiency, 8) + '<small>%</small>';
+                // 添加状态标签
+                let statusSpan = document.createElement('span');
+                statusSpan.className = `status-badge ${isPass ? 'status-pass' : 'status-fail'}`;
+                statusSpan.textContent = isPass ? '合格' : '不合格';
+                // 清除原有状态标签（如果有）
+                let existingStatus = efficiencyBig.querySelector('.status-badge');
+                if (existingStatus) existingStatus.remove();
+                efficiencyBig.appendChild(statusSpan);
+                // 颜色保持原有逻辑
+                if (efficiency >= 90) efficiencyBig.style.color = "#1f6e43";
+                else if (efficiency >= 80) efficiencyBig.style.color = "#c97e1a";
+                else efficiencyBig.style.color = "#b34b3b";
+            } else {
+                efficiencyBig.innerHTML = '?<small>%</small> <span class="status-badge status-fail">无效</span>';
+                efficiencyBig.style.color = "#b34b3b";
+            }
+        }
+
+        // 快捷输入
+        function setVoltageRegValues(val) {
+            vrMax.value = val;
+            vrMin.value = val;
+            vrRef.value = val;
+            computeAll();
+        }
+        function setLoadRegValues(val) {
+            lrNoLoad.value = val;
+            lrMin.value = val;
+            computeAll();
+        }
+        function setMultiChannelVoltages(val) {
+            for (let i = 0; i < channelCount; i++) {
+                voltageInputs[i].value = val;
+            }
+            computeAll();
+        }
+
+        // 清空函数
+        function clearVoltageReg() {
+            vrMax.value = '0';
+            vrMin.value = '0';
+            vrRef.value = '0';
+            computeAll();
+        }
+        function clearLoadReg() {
+            lrNoLoad.value = '0';
+            lrMin.value = '0';
+            computeAll();
+        }
+        function clearMultiChannels() {
+            for (let i = 0; i < channelCount; i++) {
+                currentInputs[i].value = '0';
+                voltageInputs[i].value = '0';
+            }
+            computeAll();
+        }
+
+        // 绑定快捷按钮
+        document.querySelectorAll('#vrQuickBtns .quick-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const val = parseFloat(btn.getAttribute('data-val'));
+                if (!isNaN(val)) setVoltageRegValues(val);
+            });
+        });
+        document.querySelectorAll('#lrQuickBtns .quick-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const val = parseFloat(btn.getAttribute('data-val'));
+                if (!isNaN(val)) setLoadRegValues(val);
+            });
+        });
+        document.querySelectorAll('#multiQuickBtns .quick-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const val = parseFloat(btn.getAttribute('data-val'));
+                if (!isNaN(val)) setMultiChannelVoltages(val);
+            });
+        });
+
+        // 绑定清空按钮
+        document.getElementById('clearVRBtn').addEventListener('click', clearVoltageReg);
+        document.getElementById('clearLRBtn').addEventListener('click', clearLoadReg);
+        document.getElementById('clearMultiBtn').addEventListener('click', clearMultiChannels);
+
+        // 绑定所有输入事件
+        const allInputs = [
+            vrMax, vrMin, vrRef,
+            lrNoLoad, lrMin,
+            outVolt, outCurr,
+            ...currentInputs,
+            ...voltageInputs
+        ];
+        allInputs.forEach(input => {
+            input.addEventListener('input', computeAll);
+            input.addEventListener('blur', computeAll);
+        });
+
+        computeAll();
+    })();
+</script>
+</body>
 </html>
